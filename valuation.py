@@ -24,9 +24,9 @@ from typing import Optional, List
 # ----------------------------------------------------------------------------
 EQUITY_RISK_PREMIUM = 0.05      # long-run US equity risk premium
 DEFAULT_RISK_FREE_RATE = 0.0425 # used only if a live 10Y yield can't be fetched
-TERMINAL_GROWTH_RATE = 0.025    # perpetuity growth, ~ long-run nominal GDP
+TERMINAL_GROWTH_RATE = 0.03     # perpetuity growth, ~ long-run nominal GDP
 DEFAULT_TAX_RATE = 0.25         # effective tax rate fallback
-PROJECTION_YEARS = 5
+PROJECTION_YEARS = 10           # a longer explicit window suits stable, mature compounders
 MAX_YEAR1_GROWTH = 0.30         # sanity ceiling on the first projected year's growth
 MIN_YEAR1_GROWTH = -0.20        # sanity floor (lets a shrinking business still resolve)
 MAX_DIVIDEND_GROWTH = 0.10      # sanity ceiling for DDM growth assumption

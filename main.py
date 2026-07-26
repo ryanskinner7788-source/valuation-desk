@@ -40,6 +40,30 @@ def _sanitize_for_json(obj):
     return obj
 
 
+def _valuation_gap_note(fair_value, current_price, model_name):
+    """
+    A DCF or DDM fair value that's very far from the current price usually
+    means the assumptions (discount rate, growth durability) don't match
+    what the market is pricing in — not that the model is broken or the
+    stock is mispriced. This is most visible for two common cases: richly
+    valued, high-quality compounders (where a textbook discount rate makes
+    the DCF undershoot badly) and out-of-favor or declining businesses
+    (where it can overshoot). Surfacing that plainly beats presenting a
+    lone number with no context.
+    """
+    if not fair_value or not current_price:
+        return None
+    gap = (fair_value - current_price) / current_price
+    if abs(gap) < 0.35:
+        return None
+    direction = "well below" if gap < 0 else "well above"
+    return (f"This {model_name} value is {direction} the current price. A gap this large usually means "
+            f"the assumptions above (discount rate, growth) don't match what the market is pricing in for "
+            f"this stock, rather than the stock being mispriced — {model_name} tends to undershoot for "
+            f"expensive, high-quality compounders and can overshoot for struggling ones. Worth treating as "
+            f"a prompt to question the assumptions, not a verdict.")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "time": datetime.now(timezone.utc).isoformat()}
@@ -156,13 +180,23 @@ def analyze(ticker: str, peers: Optional[str] = Query(default=None,
         "analyst_high_target": analyst_targets.get("high"),
     }
 
+    dcf_dict = asdict(dcf_result)
+    if dcf_result.available:
+        dcf_dict["gap_note"] = _valuation_gap_note(
+            dcf_result.fair_value_per_share, snapshot.get("current_price"), "DCF")
+
+    ddm_dict = asdict(ddm_result)
+    if ddm_result.available:
+        ddm_dict["gap_note"] = _valuation_gap_note(
+            ddm_result.fair_value_per_share, snapshot.get("current_price"), "DDM")
+
     result = {
         "symbol": ticker,
         "snapshot": snapshot,
         "analyst_targets": analyst_targets,
         "wacc": asdict(wacc_result),
-        "dcf": asdict(dcf_result),
-        "ddm": asdict(ddm_result),
+        "dcf": dcf_dict,
+        "ddm": ddm_dict,
         "relative_valuation": relative_valuation,
         "price_chart": price_chart,
         "valuation_summary": valuation_summary,

@@ -258,6 +258,7 @@ function renderDcfPanel(dcf, currentPrice, currency, caveat) {
       <span class="fv-value">${fmtCurrency(dcf.fair_value_per_share, currency)}</span>
     </div>
     ${upside != null ? `<div class="fv-delta ${upDownClass(upside)}">${fmtPctFraction(upside)} vs current price</div>` : ''}
+    ${dcf.gap_note ? `<p class="caveat">${escapeHtml(dcf.gap_note)}</p>` : ''}
     <details class="assumptions">
       <summary>Assumptions</summary>
       <table class="data-table">
@@ -273,7 +274,7 @@ function renderDcfPanel(dcf, currentPrice, currency, caveat) {
 
 // ---------------------------------------------------------------- panel: DDM
 
-function renderDdmPanel(ddm, currentPrice, currency) {
+function renderDdmPanel(ddm, currentPrice, currency, caveat) {
   if (!ddm.available) {
     return `
     <div class="panel">
@@ -285,11 +286,13 @@ function renderDdmPanel(ddm, currentPrice, currency) {
   return `
   <div class="panel">
     <div class="panel-eyebrow"><span class="panel-code">DDM</span><span class="panel-title">Dividend Discount Model</span></div>
+    ${caveat ? `<p class="caveat">${escapeHtml(caveat)}</p>` : ''}
     <div class="fv-row">
       <span class="fv-label">FAIR VALUE / SHARE</span>
       <span class="fv-value">${fmtCurrency(ddm.fair_value_per_share, currency)}</span>
     </div>
     ${upside != null ? `<div class="fv-delta ${upDownClass(upside)}">${fmtPctFraction(upside)} vs current price</div>` : ''}
+    ${ddm.gap_note ? `<p class="caveat">${escapeHtml(ddm.gap_note)}</p>` : ''}
     <details class="assumptions">
       <summary>Assumptions</summary>
       <table class="data-table">
@@ -477,7 +480,7 @@ function renderResults(data) {
     renderSummaryPanel(data.valuation_summary, currency),
     renderTargetsPanel(data.analyst_targets, data.snapshot.current_price, currency),
     renderDcfPanel(data.dcf, data.snapshot.current_price, currency, data.snapshot.dcf_caveat),
-    renderDdmPanel(data.ddm, data.snapshot.current_price, currency),
+    renderDdmPanel(data.ddm, data.snapshot.current_price, currency, data.snapshot.ddm_caveat),
     renderRelValPanel(data.relative_valuation, currency),
     renderPriceChartPanel(data.price_chart),
     renderNewsPanel(data.news),

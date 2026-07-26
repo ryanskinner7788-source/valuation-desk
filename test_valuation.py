@@ -47,7 +47,7 @@ dcf = run_dcf(
 print(dcf)
 check("DCF available", dcf.available)
 check("fair value per share is positive and plausible ($1-$1000)", dcf.fair_value_per_share is not None and 1 < dcf.fair_value_per_share < 1000)
-check("5 years projected", len(dcf.projected_fcf) == 5)
+check("10 years projected", len(dcf.projected_fcf) == 10)
 check("FCF grows from year 1 to year 2 when growth > terminal", dcf.projected_fcf[1] > dcf.projected_fcf[0])
 
 print("\n=== DCF: negative FCF (should degrade gracefully, not crash) ===")

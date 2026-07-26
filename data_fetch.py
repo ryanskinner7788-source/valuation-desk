@@ -114,6 +114,23 @@ def fetch_snapshot(tkr: yf.Ticker) -> dict:
         dcf_caveat = ("This sector's cash-flow profile doesn't map cleanly onto a standard FCFF "
                       "DCF — treat the DCF figure below as a rough anchor rather than a precise one.")
 
+    # Compute yield ourselves from dividend-rate / price (both plain dollar
+    # figures) instead of trusting yfinance's dividendYield field directly —
+    # that field's unit convention (a fraction like 0.008, vs. a whole
+    # percent like 0.8) has changed across yfinance versions, so relying on
+    # it directly risks silently showing a number 100x off.
+    dividend_rate = _safe(info, "dividendRate")
+    computed_dividend_yield = None
+    if dividend_rate and current_price:
+        computed_dividend_yield = dividend_rate / current_price
+
+    ddm_caveat = None
+    if dividend_rate and computed_dividend_yield is not None and computed_dividend_yield < 0.015:
+        ddm_caveat = ("This dividend yield is low, so DDM only captures a small slice of what this "
+                       "company actually returns to shareholders — many low-yield companies return "
+                       "far more through buybacks, which DDM can't see at all. Treat this figure with "
+                       "that in mind rather than as a full valuation.")
+
     return {
         "symbol": tkr.ticker,
         "name": _safe(info, "longName", _safe(info, "shortName", tkr.ticker)),
@@ -122,6 +139,7 @@ def fetch_snapshot(tkr: yf.Ticker) -> dict:
         "sector": sector,
         "industry": industry,
         "dcf_caveat": dcf_caveat,
+        "ddm_caveat": ddm_caveat,
         "current_price": current_price,
         "previous_close": previous_close,
         "change": change,
@@ -140,8 +158,8 @@ def fetch_snapshot(tkr: yf.Ticker) -> dict:
         "ev_to_ebitda": _safe(info, "enterpriseToEbitda"),
         "total_debt": _safe(info, "totalDebt"),
         "total_cash": _safe(info, "totalCash"),
-        "dividend_rate": _safe(info, "dividendRate"),
-        "dividend_yield": _safe(info, "dividendYield"),
+        "dividend_rate": dividend_rate,
+        "dividend_yield": computed_dividend_yield if computed_dividend_yield is not None else _safe(info, "dividendYield"),
         "payout_ratio": _safe(info, "payoutRatio"),
     }
 
@@ -214,7 +232,12 @@ def fetch_dcf_inputs(tkr: yf.Ticker) -> dict:
 
     fcf_history = _series_to_sorted_pairs(fcf_row)
     if fcf_history:
-        base_fcf = fcf_history[-1][1]
+        # Average the most recent up-to-3 years as the projection's starting
+        # point, instead of using only the single latest year. One unusual
+        # year (a capex spike, a working-capital swing) would otherwise set
+        # the base for the entire 5-year projection on its own.
+        recent_values = [v for _, v in fcf_history[-3:]]
+        base_fcf = sum(recent_values) / len(recent_values)
         if len(fcf_history) >= 2:
             years = len(fcf_history) - 1
             # calculate_cagr() requires BOTH endpoints to be positive, which
