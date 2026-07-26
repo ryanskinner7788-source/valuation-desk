@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Valuation Desk</title>
+<meta name="description" content="Type a ticker, get analyst targets, DCF, DDM, relative valuation, a price chart, and news.">
+
+<!-- iOS "Add to Home Screen" behavior -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Val Desk">
+<meta name="theme-color" content="#0B0E14">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">VALUATION<span>DESK</span></div>
+  <form id="cmd-form" class="cmd-bar" autocomplete="off">
+    <label class="cmd-prompt" for="ticker-input">SYM&gt;</label>
+    <input id="ticker-input" class="cmd-input" type="text" inputmode="latin"
+           autocapitalize="characters" autocorrect="off" spellcheck="false"
+           placeholder="AAPL" maxlength="12">
+    <button type="submit" class="cmd-go">GO</button>
+  </form>
+  <button id="peers-toggle" class="peers-toggle" type="button" aria-expanded="false">+ compare peers</button>
+  <div id="peers-row" class="peers-row hidden">
+    <input id="peers-input" class="peers-input" type="text" inputmode="latin"
+           autocapitalize="characters" autocorrect="off" spellcheck="false"
+           placeholder="MSFT, GOOGL (optional)">
+  </div>
+</header>
+
+<main id="main">
+  <section id="empty-state" class="empty-state">
+    <div class="empty-glyph">$</div>
+    <p class="empty-title">Type a ticker to pull it up.</p>
+    <p class="empty-sub">Analyst targets · DCF · DDM · relative valuation · chart · news</p>
+  </section>
+
+  <section id="loading-state" class="loading-state hidden">
+    <div class="spinner" aria-hidden="true"></div>
+    <p id="loading-msg">Fetching SYM…</p>
+    <p class="loading-sub">First load can take up to a minute if the server was asleep.</p>
+  </section>
+
+  <section id="error-state" class="error-state hidden">
+    <p class="error-title">No data</p>
+    <p id="error-msg" class="error-msg"></p>
+    <button id="error-retry" class="retry-btn" type="button">Try again</button>
+  </section>
+
+  <section id="results" class="results hidden"></section>
+</main>
+
+<footer class="app-footer">
+  <p>Data via Yahoo Finance, personal informational use only — not investment advice.</p>
+  <p id="updated-line"></p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
